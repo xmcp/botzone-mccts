@@ -15,7 +15,10 @@ s=requests.Session()
 #s.verify=False
 fn_re=re.compile(r'^\s*misaka_query_(\d+)\.txt\s*$')
 
-EXE_NAME=input('Program Name: ')
+EXE_NAME=input('Program: ')
+if not EXE_NAME:
+    import invader
+    logging.getLogger('init').info('using built-in invader')
 
 if 'mcc-credentials' in os.environ:
     username,password=json.loads(os.environ['mcc-credentials'])
@@ -67,16 +70,19 @@ def get_input(session_id):
     return res.text
 
 def run_solution(inp):
-    p=subprocess.Popen(
-        executable=EXE_NAME,
-        args=[],
-        shell=False,
-        stdin=subprocess.PIPE,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-    )
-    pout,perr=p.communicate(inp.encode())
-    return pout.decode()
+    if EXE_NAME:
+        p=subprocess.Popen(
+            executable=EXE_NAME,
+            args=[],
+            shell=False,
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+        pout,perr=p.communicate(inp.encode())
+        return pout.decode()
+    else:
+        return invader.main(inp)
 
 def upload_solution(out,session_id):
     filename='misaka_answer_%s.txt'%session_id
