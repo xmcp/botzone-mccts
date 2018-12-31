@@ -21,5 +21,5 @@ Misaka Cloud Computing Telepathy Suite: the BotZone AI in your own computer
 
 - Select "Basic I/O" on BotZone in regard with your program
 - Don't input your program's path in order to activate built-in emulated invader
-- To avoid timeout error, keep the execution time of your program under 4 seconds
+- To avoid timeout error, keep the execution time of your program under 8 seconds
 - In case of crashes, you might need to delete `/data/misaka_*` manually in your user directory

@@ -7,7 +7,7 @@ import re
 
 output_re=re.compile(r'^\s(?:\s\d+\. \w{2} - \w{2} \(\w{2}\))?\s\d+\. (\w{2}) - (\w{2}) \((\w{2})\)$')
 
-TIMEOUT=4
+TIMEOUT=7
 SCRIPT_LOCATION=os.path.split(__file__)[0]
 
 INVADER_CONFIG_COMPUTER='1:7:7:%d:Computer'%TIMEOUT
@@ -85,25 +85,25 @@ def main(inp):
         f.write(proc_input(inp))
 
     os.system('start %s i%s.txt'%(os.path.join(SCRIPT_LOCATION,'invader.exe'),session))
-    time.sleep(.45)
+    time.sleep(.5)
     # un-pause
     autopy.key.tap(autopy.key.Code.F3,[])
-    time.sleep(.05)
+    time.sleep(.1)
     # do move
     autopy.key.tap('M',[autopy.key.Modifier.ALT])
-    time.sleep(.05)
     autopy.key.tap('A',[])
     time.sleep(TIMEOUT)
     autopy.key.tap(autopy.key.Code.SPACE,[])
-    time.sleep(.1)
+    time.sleep(.2)
     # open save dialog
     autopy.key.tap('G',[autopy.key.Modifier.ALT])
     autopy.key.tap('V',[])
-    time.sleep(.2)
+    time.sleep(.3)
     # save
     autopy.key.type_string(os.path.abspath('o%s'%session))
-    autopy.key.tap(autopy.key.Code.RETURN,[])
     time.sleep(.1)
+    autopy.key.tap(autopy.key.Code.RETURN,[])
+    time.sleep(.2)
     # quit
     autopy.key.tap(autopy.key.Code.F4,[autopy.key.Modifier.ALT])
 
