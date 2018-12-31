@@ -10,17 +10,32 @@ import logging
 import threading
 
 logging.basicConfig(level=logging.INFO,format='%(asctime)s | %(name)s | %(levelname)s | %(message)s')
+init_logger=logging.getLogger('init')
 
 s=requests.Session()
 #s.verify=False
 fn_re=re.compile(r'^\s*misaka_query_(\d+)\.txt\s*$')
 
-EXE_NAME=input('Program: ')
-if not EXE_NAME:
-    import invader
-    logging.getLogger('init').info('using built-in invader')
+EXE_NAME=input('PROGRAM Path or MODULE Name: ')
+try:
+    run_solution=__import__(EXE_NAME).main
+    init_logger.info('loaded MODULE %s'%EXE_NAME)
+except ModuleNotFoundError:
+    if os.path.isfile(EXE_NAME):
+        init_logger.info('loaded PROGRAM %s'%EXE_NAME)
+        def run_solution(inp):
+            p=subprocess.Popen(
+                executable=EXE_NAME, args=[], shell=False,
+                stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            )
+            pout,perr=p.communicate(inp.encode())
+            return pout.decode()
+    else:
+        init_logger.fatal('%s is neither a PROGRAM nor a MODULE'%EXE_NAME)
+        raise SystemExit()
 
 if 'mcc-credentials' in os.environ:
+    init_logger.info('using login credential from environment')
     username,password=json.loads(os.environ['mcc-credentials'])
 else:
     username=input('Username (Email Address): ')
@@ -34,7 +49,13 @@ res=s.post(
     },
 )
 res.raise_for_status()
-assert res.json()['success']
+try:
+    assert res.json()['success']
+except AssertionError:
+    init_logger.fatal('logging in failed')
+    raise SystemExit()
+else:
+    init_logger.info('logged in')
 
 solved_session=set()
 def get_session():
@@ -68,21 +89,6 @@ def get_input(session_id):
     )
     res.raise_for_status()
     return res.text
-
-def run_solution(inp):
-    if EXE_NAME:
-        p=subprocess.Popen(
-            executable=EXE_NAME,
-            args=[],
-            shell=False,
-            stdin=subprocess.PIPE,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-        )
-        pout,perr=p.communicate(inp.encode())
-        return pout.decode()
-    else:
-        return invader.main(inp)
 
 def upload_solution(out,session_id):
     filename='misaka_answer_%s.txt'%session_id

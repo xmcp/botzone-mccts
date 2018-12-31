@@ -1,4 +1,13 @@
 #coding=utf-8
+
+''' InvaderMC Wrapper
+
+A built-in Python wrapper for Amazons AI InvaderMC.
+The executable program is from http://www.csun.edu/~lorentz/amazon.htm
+
+Please note that running this wrapper in parallel will cause error!
+'''
+
 import autopy.key
 import os
 import random
@@ -85,7 +94,7 @@ def main(inp):
         f.write(proc_input(inp))
 
     os.system('start %s i%s.txt'%(os.path.join(SCRIPT_LOCATION,'invader.exe'),session))
-    time.sleep(.5)
+    time.sleep(.7)
     # un-pause
     autopy.key.tap(autopy.key.Code.F3,[])
     time.sleep(.1)
@@ -94,11 +103,11 @@ def main(inp):
     autopy.key.tap('A',[])
     time.sleep(TIMEOUT)
     autopy.key.tap(autopy.key.Code.SPACE,[])
-    time.sleep(.2)
+    time.sleep(.1)
     # open save dialog
     autopy.key.tap('G',[autopy.key.Modifier.ALT])
     autopy.key.tap('V',[])
-    time.sleep(.3)
+    time.sleep(.2)
     # save
     autopy.key.type_string(os.path.abspath('o%s'%session))
     time.sleep(.1)
