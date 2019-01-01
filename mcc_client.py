@@ -9,7 +9,7 @@ inp=sys.stdin.read()
 with open('/data/misaka_query_%s.txt'%session_id, 'w') as f:
     f.write(inp)
 while not os.path.exists('/data/misaka_answer_%s.txt'%session_id):
-    time.sleep(.1)
+    time.sleep(.05)
     with open('/data/misaka_keepalive.txt','w') as f:
         f.write('.')
     os.remove('/data/misaka_keepalive.txt')
