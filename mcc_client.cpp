@@ -1,4 +1,5 @@
 #include <sys/stat.h>
+#include <sys/time.h>
 #include <unistd.h>
 #include <bits/stdc++.h>
 using namespace std;
@@ -10,7 +11,9 @@ inline bool file_exists(char name[]) {
 
 char session_id[77],inp_fn[77],out_fn[77];
 int main() {
-    sprintf(session_id,"%d%06d",(int)time(0),int(1000000.*rand()/RAND_MAX));
+    struct timeval tp;
+    gettimeofday(&tp,0);
+    sprintf(session_id,"%ld%06ld",(long)tp.tv_sec,(long)tp.tv_usec);
     sprintf(inp_fn,"/data/misaka_query_%s.txt",session_id);
     sprintf(out_fn,"/data/misaka_answer_%s.txt",session_id);
     
