@@ -7,6 +7,7 @@ import sys
 import json
 import subprocess
 import time
+import logging
 
 import urllib3
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -17,14 +18,16 @@ FALLBACK_EXE=os.path.join(SCRIPT_LOCATION,'fallback.exe' if sys.platform=='win32
 s=requests.Session()
 s.verify=False
 
+init_logger=logging.getLogger('emiya init')
 if 'mcc_localai' in os.environ:
     emiya_args=json.loads(os.environ['mcc_localai'])
-    print('loaded %d emiya args'%len(emiya_args))
 else:
     emiya_args=json.loads(input('List of User ID and API Key: '))
+init_logger.info('loaded %d emiya bots'%len(emiya_args))
 
 if 'mcc_opponent' in os.environ:
     opponent=os.environ['mcc_opponent']
+    init_logger.info('using opponent from environment')
 else:
     opponent=input('Opponent ID: ')
 
@@ -43,7 +46,8 @@ class Match:
         self.play_q.put({'X-Match-'+self.match_id: output})
 
 class EmiyaBot:
-    def __init__(self,userid,apikey):
+    def __init__(self,userid,apikey,ind):
+        self.ind=ind
         self.userid=userid
         self.apikey=apikey
 
@@ -53,15 +57,17 @@ class EmiyaBot:
         threading.Thread(target=self.localai_worker,daemon=True).start()
 
     def localai_worker(self):
+        logger=logging.getLogger('emiya %d worker'%self.ind)
+        logger.info('worker thread started')
         while True:
             can_skip_response=self.ongoing_match is None or not self.ongoing_match.avail.is_set()
             if can_skip_response and self.play_q.empty():
                 item={}
-                print('init no item')
+                logger.info('send localai request without item')
             else:
-                print('waiting item')
+                logger.info('waiting for item')
                 item=self.play_q.get(block=True)
-                print('send item', item)
+                logger.info('send localai request with item %r'%item)
 
             while True:
                 res=s.get(
@@ -69,8 +75,8 @@ class EmiyaBot:
                     headers=item
                 )
                 if res.status_code!=200:
-                    print('network error, will retry',res.status_code)
-                    print(res.text)
+                    logger.error('network error %s, will retry'%res.status_code)
+                    logger.info(res.text)
                     time.sleep(.2)
                 else:
                     break
@@ -82,13 +88,13 @@ class EmiyaBot:
             for match_id, evt in zip(lines[1:1+2*evt_count:2],lines[2:1+2*evt_count:2]):
                 while self.ongoing_match is None or match_id!=self.ongoing_match.match_id:
                     if not self.matchid_got_event.wait(.5):
-                        print('not recognized ongoing match, will kill',match_id)
+                        logger.warning('unrecognized ongoing match, will kill %s'%match_id)
                         self.play_q.put({'X-Match-'+match_id: '-1 -1 -1 -1 -1 -1'})
                         break
                     else:
                         self.matchid_got_event.clear()
                 else:
-                    print('got response for',match_id)
+                    logger.info('got response for %s'%match_id)
                     evt=evt.strip()
                     if evt!='-1 -1 -1 -1 -1 -1':
                         self.ongoing_match.history.append(evt)
@@ -96,21 +102,24 @@ class EmiyaBot:
 
             for match_id,*_ in map(str.split,lines[1+2*evt_count:]):
                 if self.ongoing_match is not None and match_id==self.ongoing_match.match_id:
-                    print('match died',match_id)
+                    logger.info('match died %s'%match_id)
                     self.ongoing_match.dead=True
                     self.ongoing_match.avail.set()
                     self.ongoing_match=None
                 else:
-                    print('not recognized dead match',match_id)
+                    logger.warning('ignoring unrecognized dead match %s'%match_id)
 
     def start_match(self,me_first):
+        logger=logging.getLogger('emiya %d starter'%self.ind)
         if self.ongoing_match is not None:
+            logger.warning('replacing ongoing match')
             self.play_q.put({})
 
         self.ongoing_match=Match(self.play_q)
         retries_left=6
 
         def do_req():
+            logger.info('starting match')
             res=s.get(
                 'https://www.botzone.org.cn/api/%s/%s/runmatch'%(self.userid,self.apikey),
                 headers={
@@ -120,60 +129,64 @@ class EmiyaBot:
                 }
             )
             if res.status_code!=200:
-                print('error starting match',res.status_code)
-                print(res.text)
+                logger.error('cannot start match',res.status_code)
+                logger.info(res.text)
 
                 nonlocal retries_left
                 if retries_left:
                     retries_left-=1
-                    print('will retry')
+                    logger.info('will retry: %d retries left'%retries_left)
                     time.sleep(.2)
                     do_req()
                 else:
-                    print('will NOT retry')
+                    logger.critical('will NOT retry')
                 return
 
             self.ongoing_match.match_id=res.text.strip()
-            print('got new match id',self.ongoing_match.match_id)
+            logger.info('new match id'%self.ongoing_match.match_id)
             self.matchid_got_event.set()
 
         threading.Thread(target=do_req).start()
         return self.ongoing_match
 
-emiya_bots=[EmiyaBot(*arg) for arg in emiya_args]
+emiya_bots=[EmiyaBot(*arg,i) for i,arg in enumerate(emiya_args)]
 
 def fallback(inp):
     p=subprocess.Popen(
         executable=FALLBACK_EXE, args=[], shell=False,
         stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
     )
-    pout, perr=p.communicate(inp.encode())
+    pout,perr=p.communicate(inp.encode())
     return pout.decode()
 
 def main(inp):
+    logger=logging.getLogger('main')
+
     hist=list(filter(None, inp.split('\n')))[1:]
     if hist[0]=='-1 -1 -1 -1 -1 -1':
         hist=hist[1:]
+
+    logger.debug('hist %r'%hist)
 
     def do_first_step(bot):
         mat=bot.start_match(len(hist)==1)
         mat.avail.wait()
 
         if len(hist)==1:
-            print('play first turn')
+            logger.info('match started, playing our first turn')
             mat.play_turn(hist[0])
             mat.avail.wait()
 
-        print('got result')
+        logger.info('got result %r'%mat.history[-1])
         return mat.history[-1]
 
     if len(hist)<=1:
-        print('start match')
+        logger.info('start new match')
         for bot in emiya_bots:
             if not bot.ongoing_match:
                 return do_first_step(bot)
 
-        print('no empty bot, will restart first one')
+        logger.error('no empty bot, will restart first one')
         return do_first_step(emiya_bots[0])
 
     else:
@@ -183,18 +196,18 @@ def main(inp):
             mat=bot.ongoing_match
 
             if mat.avail.is_set() and mat.history==hist[:-1]:
-                print('found match',mat.match_id)
+                logger.info('found match %s'%mat.match_id)
                 mat.play_turn(hist[-1])
                 mat.avail.wait()
 
                 if mat.dead:
-                    print('dead turn, using fallback')
+                    logger.info('dead turn, using fallback')
                     return fallback(inp)
                 else:
-                    print('got result')
+                    logger.info('got result %r'%mat.history[-1])
                     return mat.history[-1]
 
-        print('no corresponding match')
+        logger.critical('no corresponding match')
         return '-1 -1 -1 -1 -1 -1'
 
 if __name__=='__main__':
