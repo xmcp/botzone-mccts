@@ -62,17 +62,24 @@ class EmiyaBot:
                 item=self.play_q.get(block=True)
                 print('send item', item)
 
-            res=s.get(
-                'https://www.botzone.org.cn/api/%s/%s/localai'%(self.userid,self.apikey),
-                headers=item
-            )
-            res.raise_for_status()
+            while True:
+                res=s.get(
+                    'https://www.botzone.org.cn/api/%s/%s/localai'%(self.userid,self.apikey),
+                    headers=item
+                )
+                if res.status_code!=200:
+                    print('network error, will retry',res.status_code)
+                    print(res.text)
+                    time.sleep(.2)
+                else:
+                    break
+
             lines=res.text.split('\n')
 
             evt_count, dead_count=map(int, lines[0].split(' '))
 
             for match_id, evt in zip(lines[1:1+2*evt_count:2],lines[2:1+2*evt_count:2]):
-                while match_id!=self.ongoing_match.match_id:
+                while self.ongoing_match is None or match_id!=self.ongoing_match.match_id:
                     if not self.matchid_got_event.wait(.5):
                         print('not recognized ongoing match, will kill',match_id)
                         self.play_q.put({'X-Match-'+match_id: '-1 -1 -1 -1 -1 -1'})
@@ -96,8 +103,11 @@ class EmiyaBot:
                     print('not recognized dead match',match_id)
 
     def start_match(self,me_first):
+        if self.ongoing_match is not None:
+            self.play_q.put({})
+
         self.ongoing_match=Match(self.play_q)
-        retries_left=5
+        retries_left=6
 
         def do_req():
             res=s.get(
@@ -116,7 +126,7 @@ class EmiyaBot:
                 if retries_left:
                     retries_left-=1
                     print('will retry')
-                    time.sleep(.25)
+                    time.sleep(.2)
                     do_req()
                 else:
                     print('will NOT retry')
@@ -144,23 +154,26 @@ def main(inp):
     if hist[0]=='-1 -1 -1 -1 -1 -1':
         hist=hist[1:]
 
+    def do_first_step(bot):
+        mat=bot.start_match(len(hist)==1)
+        mat.avail.wait()
+
+        if len(hist)==1:
+            print('play first turn')
+            mat.play_turn(hist[0])
+            mat.avail.wait()
+
+        print('got result')
+        return mat.history[-1]
+
     if len(hist)<=1:
         print('start match')
         for bot in emiya_bots:
             if not bot.ongoing_match:
-                mat=bot.start_match(len(hist)==1)
-                mat.avail.wait()
+                return do_first_step(bot)
 
-                if len(hist)==1:
-                    print('play first turn')
-                    mat.play_turn(hist[0])
-                    mat.avail.wait()
-
-                print('got result')
-                return mat.history[-1]
-
-        print('error no empty bot')
-        return '-1 -1 -1 -1 -1 -1'
+        print('no empty bot, will restart first one')
+        return do_first_step(emiya_bots[0])
 
     else:
         for bot in emiya_bots:

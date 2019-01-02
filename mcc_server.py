@@ -126,7 +126,7 @@ def upload_solution(out,session_id):
         ],
     )
     res.raise_for_status()
-    assert res.json()['success']
+    assert res.json()['success'], res.text
 
 def solver_main(session_id):
     start_time=time.time()
