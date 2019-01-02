@@ -17,13 +17,17 @@ FALLBACK_EXE=os.path.join(SCRIPT_LOCATION,'fallback.exe' if sys.platform=='win32
 s=requests.Session()
 s.verify=False
 
-if 'mcc-localai' in os.environ:
-    emiya_args=json.loads(os.environ['mcc-localai'])
+if 'mcc_localai' in os.environ:
+    emiya_args=json.loads(os.environ['mcc_localai'])
     print('loaded %d emiya args'%len(emiya_args))
 else:
     emiya_args=json.loads(input('List of User ID and API Key: '))
 
-opponent=input('Opponent ID: ')
+if 'mcc_opponent' in os.environ:
+    opponent=os.environ['mcc_opponent']
+else:
+    opponent=input('Opponent ID: ')
+
 
 class Match:
     def __init__(self,play_q):

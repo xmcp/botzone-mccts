@@ -37,9 +37,9 @@ except ModuleNotFoundError:
         init_logger.fatal('%s is neither a PROGRAM nor a MODULE'%EXE_NAME)
         raise SystemExit()
 
-if 'mcc-credentials' in os.environ:
+if 'mcc_credentials' in os.environ:
     init_logger.info('using login credential from environment')
-    username,password=json.loads(os.environ['mcc-credentials'])
+    username,password=json.loads(os.environ['mcc_credentials'])
 else:
     username=input('Username (Email Address): ')
     password=getpass.getpass('Password: ')
@@ -131,15 +131,17 @@ def upload_solution(out,session_id):
 def solver_main(session_id):
     start_time=time.time()
     solver_logger=logging.getLogger('solver %s'%session_id)
+    out=None
     for _ in range(3):
         try:
             solver_logger.info('downloading input')
             inp=get_input(session_id)
             solver_logger.debug('got input %r'%inp)
 
-            solver_logger.info('running solution')
-            out=run_solution(inp)
-            solver_logger.debug('output %r'%out)
+            if out is None:
+                solver_logger.info('running solution')
+                out=run_solution(inp)
+                solver_logger.debug('output %r'%out)
 
             solver_logger.info('uploading solution')
             upload_solution(out, session_id)
