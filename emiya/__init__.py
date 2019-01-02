@@ -21,10 +21,7 @@ if 'mcc-localai' in os.environ:
     emiya_args=json.loads(os.environ['mcc-localai'])
     print('loaded %d emiya args'%len(emiya_args))
 else:
-    emiya_args=[[
-        input('User ID: '),
-        input('API Key: '),
-    ]]
+    emiya_args=json.loads(input('List of User ID and API Key: '))
 
 opponent=input('Opponent ID: ')
 
