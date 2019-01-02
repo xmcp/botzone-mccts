@@ -1,12 +1,12 @@
 #coding=utf-8
 
-''' InvaderMC Wrapper
+""" InvaderMC Wrapper
 
 A built-in Python wrapper for Amazons AI InvaderMC.
 The executable program is from http://www.csun.edu/~lorentz/amazon.htm
 
 Please note that running this wrapper in parallel will cause error!
-'''
+"""
 
 import autopy.key
 import os

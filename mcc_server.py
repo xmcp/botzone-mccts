@@ -9,11 +9,14 @@ import json
 import logging
 import threading
 
+import urllib3
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
 logging.basicConfig(level=logging.INFO,format='%(asctime)s | %(name)s | %(levelname)s | %(message)s')
 init_logger=logging.getLogger('init')
 
 s=requests.Session()
-#s.verify=False
+s.verify=False
 fn_re=re.compile(r'^\s*misaka_query_(\d+)\.txt\s*$')
 
 EXE_NAME=input('PROGRAM Path or MODULE Name: ')
