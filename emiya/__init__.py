@@ -76,7 +76,7 @@ class EmiyaBot:
                 )
                 if res.status_code!=200:
                     logger.error('network error %s, will retry'%res.status_code)
-                    logger.info(res.text)
+                    logger.debug(res.text)
                     time.sleep(.2)
                 else:
                     break
@@ -143,7 +143,7 @@ class EmiyaBot:
                 return
 
             self.ongoing_match.match_id=res.text.strip()
-            logger.info('new match id'%self.ongoing_match.match_id)
+            logger.info('new match id %s'%self.ongoing_match.match_id)
             self.matchid_got_event.set()
 
         threading.Thread(target=do_req).start()
@@ -160,7 +160,7 @@ def fallback(inp):
     return pout.decode()
 
 def main(inp):
-    logger=logging.getLogger('main')
+    logger=logging.getLogger('emiya main')
 
     hist=list(filter(None, inp.split('\n')))[1:]
     if hist[0]=='-1 -1 -1 -1 -1 -1':
