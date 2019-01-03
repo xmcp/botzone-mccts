@@ -141,9 +141,8 @@ def solver_main(session_id):
             if out is None:
                 solver_logger.info('running solution')
                 out=run_solution(inp)
-                solver_logger.debug('output %r'%out)
 
-            solver_logger.info('uploading solution')
+            solver_logger.info('uploading solution %r'%out)
             upload_solution(out, session_id)
             solver_logger.info('solver completed in %.2fs'%(time.time()-start_time))
         except Exception:
