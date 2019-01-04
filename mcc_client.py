@@ -37,6 +37,7 @@ if not SKIP_MCC:
         os.remove('/data/misaka_keepalive.txt')
 
 if os.path.exists(out_fn):
+    time.sleep(.05)
     with open(out_fn) as f:
         print(f.read())
     os.remove(out_fn)

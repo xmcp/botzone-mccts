@@ -6,7 +6,7 @@
 using namespace std;
 
 char FALLBACK_EXECUTABLE[77]="";
-const double TIMEOUT=4.9;
+const double TIMEOUT=4.85;
 
 inline bool file_exists(const char name[]) {
     struct stat buffer;
@@ -41,7 +41,6 @@ int main() {
         if(int fallback_pid=fork()) {
             int status;
             waitpid(fallback_pid,&status,0);
-            usleep(1000*100);
         } else {
             freopen(inp_fn,"r",stdin);
             freopen(fallback_fn,"w",stdout);
@@ -61,6 +60,7 @@ int main() {
         }
 
     if(file_exists(out_fn)) { // use mcc result
+        usleep(1000*50); // fix race condition
         FILE *fout=fopen(out_fn,"r");
         while(int c=fgetc(fout)) {
             if(c==EOF) break;
@@ -71,6 +71,7 @@ int main() {
         if(file_exists(fallback_fn))
             unlink(fallback_fn);
     } else if(file_exists(fallback_fn)) { // use fallback
+        usleep(1000*50); // fix race condition
         FILE *fout=fopen(fallback_fn,"r");
         while(int c=fgetc(fout)) {
             if(c==EOF) break;
