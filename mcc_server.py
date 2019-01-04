@@ -147,7 +147,7 @@ def solver_main(session_id):
             solver_logger.info('solver completed in %.2fs'%(time.time()-start_time))
         except Exception:
             solver_logger.exception('error, will try again')
-            time.sleep(.2)
+            time.sleep(.1)
         else:
             break
     else:
@@ -163,7 +163,7 @@ while True:
         dispatcher_logger.info('starting solver for session %s'%session_id)
         threading.Thread(target=solver_main,args=[session_id],daemon=True).start()
         solved_session.add(session_id)
-        time.sleep(.2)
+        time.sleep(.1)
     except Exception:
         dispatcher_logger.exception('error, will try again')
-        time.sleep(.2)
+        time.sleep(.1)
