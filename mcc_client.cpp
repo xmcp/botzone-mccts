@@ -1,5 +1,6 @@
 #include <sys/stat.h>
 #include <sys/time.h>
+#include <sys/wait.h>
 #include <unistd.h>
 #include <bits/stdc++.h>
 using namespace std;
@@ -27,21 +28,20 @@ int main() {
     sprintf(session_id,"%lld",start_time);
     sprintf(inp_fn,"/data/misaka_query_%s.txt",session_id);
     sprintf(out_fn,"/data/misaka_answer_%s.txt",session_id);
-    sprintf(fallback_fn,"/data/misaka_fallback_%s.txt",session_id);
+    sprintf(fallback_fn,"/tmp/misaka_fallback_%s.txt",session_id);
 
-    if(!SKIP_MCC) {
-        FILE *fin=fopen(inp_fn,"w");
-        while(int c=getchar()) {
-            if(c==EOF) break;
-            fputc(c,fin);
-        }
-        fclose(fin);
+    FILE *fin=fopen(inp_fn,"w");
+    while(int c=getchar()) {
+        if(c==EOF) break;
+        fputc(c,fin);
     }
+    fclose(fin);
 
     if(FALLBACK_EXECUTABLE[0]!='\0') {
         if(int fallback_pid=fork()) {
             int status;
             waitpid(fallback_pid,&status,0);
+            usleep(1000*100);
         } else {
             freopen(inp_fn,"r",stdin);
             freopen(fallback_fn,"w",stdout);
@@ -82,8 +82,7 @@ int main() {
         puts("mcc error no output");
     }
 
-    if(!SKIP_MCC)
-        unlink(inp_fn);
+    unlink(inp_fn);
 
     return 0;
 }
