@@ -31,7 +31,7 @@ Misaka Cloud Computing Telepathy Suite: the BotZone AI in your own computer
 - Create a file `/data/misaka_offline.txt` to manually prevent `mcc_client` from connecting to server
 - To avoid timeout error, keep the execution time of your AI in no more than 8.5 seconds (Python client) or 3.5 seconds (C++ client)
 - If you use a fallback program, keep the execution time of it in no more than 5.7 seconds (Python client) or 0.9 seconds (C++ client)
-- In case of crashes, you might need to delete `/data/misaka_*` manually in your user directory
+- In case of crashes and network failures, you might need to delete `/data/misaka_*` manually in your user directory
 - Store `["username","password"]` into environment variable `mcc_credentials` so that you will not be prompted to input your credential every time
 
 ## AI Integrating How-To

@@ -6,7 +6,7 @@
 using namespace std;
 
 char FALLBACK_EXECUTABLE[77]="";
-const double TIMEOUT=4.85;
+const double TIMEOUT=4.75;
 
 inline bool file_exists(const char name[]) {
     struct stat buffer;

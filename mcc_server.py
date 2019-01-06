@@ -17,6 +17,7 @@ init_logger=logging.getLogger('init')
 
 s=requests.Session()
 s.verify=False
+s.trust_env=False
 fn_re=re.compile(r'^\s*misaka_query_(\d+)\.txt\s*$')
 
 EXE_NAME=input('PROGRAM Path or MODULE Name: ')
@@ -75,15 +76,15 @@ def get_session():
         if match:
             session_id=match.groups()[0]
             if session_id not in solved_session:
-                return session_id
+                yield session_id
 
 def wait_session():
     while True:
-        sid=get_session()
+        sid=list(get_session())
         dispatcher_logger.debug('current session %s'%sid)
         if sid:
             return sid
-        time.sleep(.5)
+        time.sleep(.4)
 
 def get_input(session_id):
     res=s.get(
@@ -134,12 +135,11 @@ def solver_main(session_id):
     out=None
     for _ in range(3):
         try:
-            solver_logger.info('downloading input')
-            inp=get_input(session_id)
-            solver_logger.debug('got input %r'%inp)
-
             if out is None:
-                solver_logger.info('running solution')
+                solver_logger.info('downloading input')
+                inp=get_input(session_id)
+                
+                solver_logger.info('running solution %r'%inp)
                 out=run_solution(inp)
 
             solver_logger.info('uploading solution %r'%out)
@@ -159,10 +159,10 @@ dispatcher_logger.info('dispatcher started')
 while True:
     try:
         dispatcher_logger.debug('waiting for session')
-        session_id=wait_session()
-        dispatcher_logger.info('starting solver for session %s'%session_id)
-        threading.Thread(target=solver_main,args=[session_id],daemon=True).start()
-        solved_session.add(session_id)
+        for session_id in wait_session():
+            dispatcher_logger.info('starting solver for session %s'%session_id)
+            threading.Thread(target=solver_main,args=[session_id],daemon=True).start()
+            solved_session.add(session_id)
         time.sleep(.1)
     except Exception:
         dispatcher_logger.exception('error, will try again')
