@@ -32,9 +32,12 @@ else:
 if not SKIP_MCC:
     while not os.path.exists(out_fn) and time.time()-start_time<TIMEOUT:
         time.sleep(.05)
-        with open('/data/misaka_keepalive.txt','w') as f:
-            f.write('.')
-        os.remove('/data/misaka_keepalive.txt')
+        try:
+            with open('/data/misaka_keepalive.txt','w') as f:
+                f.write('.')
+            os.remove('/data/misaka_keepalive.txt')
+        except:
+            pass
 
 if os.path.exists(out_fn):
     time.sleep(.05)
