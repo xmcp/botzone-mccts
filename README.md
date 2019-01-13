@@ -1,4 +1,4 @@
-# botzone-mccts
+# [botzone](https://botzone.org.cn)-mccts
 
 Misaka Cloud Computing Telepathy Suite: the BotZone AI in your own computer
 
