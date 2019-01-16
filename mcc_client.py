@@ -6,7 +6,7 @@ import sys
 import subprocess
 
 FALLBACK_EXECUTABLE=''
-TIMEOUT=9.8
+TIMEOUT=9.75
 
 session_id='%d'%(time.time()*1e6)
 inp_fn='/data/misaka_query_%s.txt'%session_id
