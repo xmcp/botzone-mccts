@@ -11,7 +11,7 @@ Misaka Cloud Computing Telepathy Suite: the BotZone AI in your own computer
 ## Requirements
 
 - A stable network condition
-- A Python 3.x environment
+- A Python 3.7+ environment
 - A BotZone account
 - An executable AI program or Python module
 

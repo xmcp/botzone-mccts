@@ -29,7 +29,7 @@ except ModuleNotFoundError:
         init_logger.info('loaded PROGRAM %s'%EXE_NAME)
         def run_solution(inp):
             p=subprocess.Popen(
-                executable=EXE_NAME, args=[], shell=False,
+                executable=EXE_NAME, args=[], shell=False, creationflags=subprocess.ABOVE_NORMAL_PRIORITY_CLASS,
                 stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
             )
             pout,perr=p.communicate(inp.encode())
